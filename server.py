@@ -4,7 +4,7 @@ import sqlite3
 import json
 
 app = Flask(__name__)
-CORS(app) #cors
+CORS(app)  # cors
 
 def init_db():
     with sqlite3.connect('user_data.db') as conn:
@@ -17,7 +17,8 @@ def init_db():
                 language TEXT,
                 online_status TEXT,
                 time_on_page REAL,
-                mouse_moves TEXT
+                mouse_moves TEXT,
+                ip_address TEXT
             )
         ''')
         conn.commit()
@@ -35,13 +36,14 @@ def collect_data():
     online_status = data.get('online', 'Unknown')
     time_on_page = data.get('timeOnPage', 0)
     mouse_moves = json.dumps(data.get('mouseMoves', []))
+    ip_address = request.remote_addr 
 
     with sqlite3.connect('user_data.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO user_data (browser, platform, language, online_status, time_on_page, mouse_moves)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (browser_info, platform, language, online_status, time_on_page, mouse_moves))
+            INSERT INTO user_data (browser, platform, language, online_status, time_on_page, mouse_moves, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (browser_info, platform, language, online_status, time_on_page, mouse_moves, ip_address))
         conn.commit()
 
     print("--- Data Stored in Database ---")
